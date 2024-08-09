@@ -390,7 +390,7 @@ public class BatteryModule extends ReactContextBaseJavaModule {
         promise.resolve((int)(batteryLevel * 100));
     }
 }
-      `}},{type:"code",question:"How would you implement a bottom navigation bar with icons and labels using popular libraries in each framework?",option1:{framework:"Flutter",code:`
+      `}},{type:"code",question:"Which implement of bottom navigation bar with icons and labels using popular libraries in each framework do you prefer ?",option1:{framework:"Flutter",code:`
   // Using flutter_bloc for state management and flutter_botto
   
   mnavigationbar for navigation
@@ -566,7 +566,7 @@ public class BatteryModule extends ReactContextBaseJavaModule {
       </Provider>
     );
   }
-      `}},{type:"code",question:"How would you implement a simple HTTP GET request and display the results using popular libraries in each framework?",option1:{framework:"Flutter",code:`
+      `}},{type:"code",question:"Which implement of a simple HTTP GET request using popular libraries do you prefer?",option1:{framework:"Flutter",code:`
   // Using http package for network requests and flutter_bloc for state management
   
   import 'package:flutter/material.dart';
@@ -717,7 +717,7 @@ public class BatteryModule extends ReactContextBaseJavaModule {
   });
   
   export default App;
-      `}},{type:"code",question:"How would you implement a simple fade-in animation for a logo when a screen loads?",option1:{framework:"Flutter",code:`
+      `}},{type:"code",question:"Which implement of simple fade-in animation for a logo do you prefer?",option1:{framework:"Flutter",code:`
   import 'package:flutter/material.dart';
   
   class AnimatedLogo extends StatefulWidget {
