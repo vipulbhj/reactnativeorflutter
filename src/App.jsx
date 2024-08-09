@@ -23,7 +23,9 @@ ElevatedButton(
       framework: "React Native",
       code: `
 <TouchableOpacity
-  onPress={() => console.log('Button pressed!')}
+  onPress={() => {
+    console.log('Button pressed!');
+  }}
 >
   <Text>Click me</Text>
 </TouchableOpacity>
@@ -159,27 +161,695 @@ export default View;
     }
   },
   {
-    type: 'preference',
-    question: "Which approach to styling do you prefer?",
+    type: 'code',
+    question: "Which styling approach do you prefer for creating a two-column layout with the second column having two rows?",
     option1: {
       framework: "Flutter",
-      description: "Widget-based styling with ThemeData and custom Themes"
+      code: `
+Row(
+  children: [
+    Expanded(
+      flex: 1,
+      child: Container(
+        color: Colors.blue,
+        child: Center(child: Text('Column 1')),
+      ),
+    ),
+    Expanded(
+      flex: 1,
+      child: Column(
+        children: [
+          Expanded(
+            flex: 1,
+            child: Container(
+              color: Colors.green,
+              child: Center(child: Text('Column 2, Row 1')),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              color: Colors.red,
+              child: Center(child: Text('Column 2, Row 2')),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+)
+      `
     },
     option2: {
       framework: "React Native",
-      description: "JavaScript object-based styling with StyleSheet"
+      code: `
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+const TwoColumnLayout = () => (
+  <View style={styles.container}>
+    <View style={styles.column1}>
+      <Text>Column 1</Text>
+    </View>
+    <View style={styles.column2}>
+      <View style={styles.row1}>
+        <Text>Column 2, Row 1</Text>
+      </View>
+      <View style={styles.row2}>
+        <Text>Column 2, Row 2</Text>
+      </View>
+    </View>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  column1: {
+    flex: 1,
+    backgroundColor: 'blue',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  column2: {
+    flex: 1,
+  },
+  row1: {
+    flex: 1,
+    backgroundColor: 'green',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  row2: {
+    flex: 1,
+    backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+export default TwoColumnLayout;
+    `
     }
   },
   {
-    type: 'preference',
-    question: "Which navigation system seems more intuitive to you?",
+    type: 'code',
+    question: "Which implementation do you prefer to create a simple native module to get the device's battery level",
     option1: {
       framework: "Flutter",
-      description: "Navigator 2.0 with RouteInformationParser and RouterDelegate"
+      code: `
+// Dart code
+import 'package:flutter/services.dart';
+
+class Battery {
+  static const platform = MethodChannel('samples.flutter.dev/battery');
+
+  static Future<String> getBatteryLevel() async {
+    String batteryLevel;
+    try {
+      final int result = await platform.invokeMethod('getBatteryLevel');
+      batteryLevel = 'Battery level: $result%';
+    } on PlatformException catch (e) {
+      batteryLevel = "Failed to get battery level: '\${e.message}'.";
+    }
+    return batteryLevel;
+  }
+}
+
+// Android (Kotlin)
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+class MainActivity: FlutterActivity() {
+    private val CHANNEL = "samples.flutter.dev/battery"
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+            if (call.method == "getBatteryLevel") {
+                val batteryLevel = getBatteryLevel()
+                if (batteryLevel != -1) {
+                    result.success(batteryLevel)
+                } else {
+                    result.error("UNAVAILABLE", "Battery level not available.", null)
+                }
+            } else {
+                result.notImplemented()
+            }
+        }
+    }
+
+    private fun getBatteryLevel(): Int {
+        val batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        return batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+    }
+}
+      `
     },
     option2: {
       framework: "React Native",
-      description: "React Navigation with Stack, Tab, and Drawer Navigators"
+      code: `
+// JavaScript code
+import { NativeModules } from 'react-native';
+const { BatteryModule } = NativeModules;
+
+export const getBatteryLevel = async () => {
+  try {
+    const batteryLevel = await BatteryModule.getBatteryLevel();
+    return \`Battery level: \${batteryLevel}%\`;
+  } catch (e) {
+    return \`Failed to get battery level: \${e.message}\`;
+  }
+};
+
+// Android (Java)
+package com.example.reactnative;
+
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
+
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ReactMethod;
+
+public class BatteryModule extends ReactContextBaseJavaModule {
+    BatteryModule(ReactApplicationContext context) {
+        super(context);
+    }
+
+    @Override
+    public String getName() {
+        return "BatteryModule";
+    }
+
+    @ReactMethod
+    public void getBatteryLevel(Promise promise) {
+        Intent intent = this.getCurrentActivity().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        if(level == -1 || scale == -1) {
+            promise.reject("ERROR", "Could not get battery level");
+            return;
+        }
+
+        float batteryLevel = level / (float)scale;
+        promise.resolve((int)(batteryLevel * 100));
+    }
+}
+      `
+    }
+  },
+  {
+    type: 'code',
+    question: "How would you implement a bottom navigation bar with icons and labels using popular libraries in each framework?",
+    option1: {
+      framework: "Flutter",
+      code: `
+  // Using flutter_bloc for state management and flutter_botto
+  
+  mnavigationbar for navigation
+  
+  import 'package:flutter/material.dart';
+  import 'package:flutter_bloc/flutter_bloc.dart';
+  import 'package:flutter_bottomnavigationbar/flutter_bottomnavigationbar.dart';
+  
+  // Define states
+  abstract class NavigationState {}
+  class HomeState extends NavigationState {}
+  class ProfileState extends NavigationState {}
+  class SettingsState extends NavigationState {}
+  
+  // Define events
+  abstract class NavigationEvent {}
+  class TabTapped extends NavigationEvent {
+    final int index;
+    TabTapped({required this.index});
+  }
+  
+  // Define bloc
+  class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
+    NavigationBloc() : super(HomeState()) {
+      on<TabTapped>((event, emit) {
+        switch (event.index) {
+          case 0:
+            emit(HomeState());
+            break;
+          case 1:
+            emit(ProfileState());
+            break;
+          case 2:
+            emit(SettingsState());
+            break;
+        }
+      });
+    }
+  }
+  
+  class MyApp extends StatelessWidget {
+    @override
+    Widget build(BuildContext context) {
+      return MaterialApp(
+        home: BlocProvider(
+          create: (context) => NavigationBloc(),
+          child: BlocBuilder<NavigationBloc, NavigationState>(
+            builder: (context, state) {
+              return Scaffold(
+                body: _buildBody(state),
+                bottomNavigationBar: BottomNavigationBar(
+                  currentIndex: _getCurrentIndex(state),
+                  onTap: (index) => 
+                    context.read<NavigationBloc>().add(TabTapped(index: index)),
+                  items: [
+                    BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                    BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+                    BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+  
+    Widget _buildBody(NavigationState state) {
+      if (state is HomeState) return Center(child: Text('Home'));
+      if (state is ProfileState) return Center(child: Text('Profile'));
+      if (state is SettingsState) return Center(child: Text('Settings'));
+      return Container();
+    }
+  
+    int _getCurrentIndex(NavigationState state) {
+      if (state is HomeState) return 0;
+      if (state is ProfileState) return 1;
+      if (state is SettingsState) return 2;
+      return 0;
+    }
+  }
+      `
+    },
+    option2: {
+      framework: "React Native",
+      code: `
+  // Using @react-navigation/bottom-tabs for navigation and Redux for state management
+  
+  import React from 'react';
+  import { Text, View } from 'react-native';
+  import { NavigationContainer } from '@react-navigation/native';
+  import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+  import { createStore } from 'redux';
+  import { Provider, useSelector, useDispatch } from 'react-redux';
+  import Icon from 'react-native-vector-icons/MaterialIcons';
+  
+  // Redux setup
+  const initialState = { activeTab: 'Home' };
+  const reducer = (state = initialState, action) => {
+    switch (action.type) {
+      case 'SET_ACTIVE_TAB':
+        return { ...state, activeTab: action.payload };
+      default:
+        return state;
+    }
+  };
+  const store = createStore(reducer);
+  
+  // Screen components
+  function HomeScreen() {
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Home</Text></View>;
+  }
+  function ProfileScreen() {
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Profile</Text></View>;
+  }
+  function SettingsScreen() {
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Settings</Text></View>;
+  }
+  
+  const Tab = createBottomTabNavigator();
+  
+  function MyTabs() {
+    const dispatch = useDispatch();
+    const activeTab = useSelector(state => state.activeTab);
+  
+    return (
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            if (route.name === 'Home') {
+              iconName = 'home';
+            } else if (route.name === 'Profile') {
+              iconName = 'person';
+            } else if (route.name === 'Settings') {
+              iconName = 'settings';
+            }
+            return <Icon name={iconName} size={size} color={color} />;
+          },
+        })}
+        tabBarOptions={{
+          activeTintColor: 'tomato',
+          inactiveTintColor: 'gray',
+        }}
+      >
+        <Tab.Screen 
+          name="Home" 
+          component={HomeScreen} 
+          listeners={{
+            tabPress: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'Home' }),
+          }}
+        />
+        <Tab.Screen 
+          name="Profile" 
+          component={ProfileScreen}
+          listeners={{
+            tabPress: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'Profile' }),
+          }}
+        />
+        <Tab.Screen 
+          name="Settings" 
+          component={SettingsScreen}
+          listeners={{
+            tabPress: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'Settings' }),
+          }}
+        />
+      </Tab.Navigator>
+    );
+  }
+  
+  export default function App() {
+    return (
+      <Provider store={store}>
+        <NavigationContainer>
+          <MyTabs />
+        </NavigationContainer>
+      </Provider>
+    );
+  }
+      `
+    }
+  },
+  {
+    type: 'code',
+    question: "How would you implement a simple HTTP GET request and display the results using popular libraries in each framework?",
+    option1: {
+      framework: "Flutter",
+      code: `
+  // Using http package for network requests and flutter_bloc for state management
+  
+  import 'package:flutter/material.dart';
+  import 'package:http/http.dart' as http;
+  import 'package:flutter_bloc/flutter_bloc.dart';
+  import 'dart:convert';
+  
+  // Events
+  abstract class PostEvent {}
+  class FetchPosts extends PostEvent {}
+  
+  // States
+  abstract class PostState {}
+  class PostInitial extends PostState {}
+  class PostLoading extends PostState {}
+  class PostLoaded extends PostState {
+    final List<dynamic> posts;
+    PostLoaded(this.posts);
+  }
+  class PostError extends PostState {
+    final String message;
+    PostError(this.message);
+  }
+  
+  // BLoC
+  class PostBloc extends Bloc<PostEvent, PostState> {
+    PostBloc() : super(PostInitial()) {
+      on<FetchPosts>((event, emit) async {
+        emit(PostLoading());
+        try {
+          final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/posts'));
+          if (response.statusCode == 200) {
+            final List<dynamic> posts = json.decode(response.body);
+            emit(PostLoaded(posts));
+          } else {
+            emit(PostError('Failed to load posts'));
+          }
+        } catch (e) {
+          emit(PostError('An error occurred: $e'));
+        }
+      });
+    }
+  }
+  
+  class MyApp extends StatelessWidget {
+    @override
+    Widget build(BuildContext context) {
+      return MaterialApp(
+        home: BlocProvider(
+          create: (context) => PostBloc()..add(FetchPosts()),
+          child: Scaffold(
+            appBar: AppBar(title: Text('Posts')),
+            body: BlocBuilder<PostBloc, PostState>(
+              builder: (context, state) {
+                if (state is PostInitial) {
+                  return Center(child: Text('Press the button to load posts'));
+                } else if (state is PostLoading) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (state is PostLoaded) {
+                  return ListView.builder(
+                    itemCount: state.posts.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(state.posts[index]['title']),
+                        subtitle: Text(state.posts[index]['body']),
+                      );
+                    },
+                  );
+                } else if (state is PostError) {
+                  return Center(child: Text(state.message));
+                }
+                return Container();
+              },
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => context.read<PostBloc>().add(FetchPosts()),
+              child: Icon(Icons.refresh),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+      `
+    },
+    option2: {
+      framework: "React Native",
+      code: `
+  // Using axios for network requests and React Query for data fetching/caching
+  
+  import React from 'react';
+  import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+  import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
+  import axios from 'axios';
+  
+  const queryClient = new QueryClient();
+  
+  const fetchPosts = async () => {
+    const { data } = await axios.get('https://jsonplaceholder.typicode.com/posts');
+    return data;
+  };
+  
+  function PostList() {
+    const { isLoading, isError, data, error } = useQuery('posts', fetchPosts);
+  
+    if (isLoading) {
+      return <ActivityIndicator size="large" color="#0000ff" />;
+    }
+  
+    if (isError) {
+      return <Text>Error: {error.message}</Text>;
+    }
+  
+    return (
+      <FlatList
+        data={data}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.item}>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text>{item.body}</Text>
+          </View>
+        )}
+      />
+    );
+  }
+  
+  function App() {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <View style={styles.container}>
+          <PostList />
+        </View>
+      </QueryClientProvider>
+    );
+  }
+  
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingTop: 22
+    },
+    item: {
+      padding: 10,
+      fontSize: 18,
+      height: 44,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  });
+  
+  export default App;
+      `
+    }
+  },
+  {
+    type: 'code',
+    question: "How would you implement a simple fade-in animation for a logo when a screen loads?",
+    option1: {
+      framework: "Flutter",
+      code: `
+  import 'package:flutter/material.dart';
+  
+  class AnimatedLogo extends StatefulWidget {
+    @override
+    _AnimatedLogoState createState() => _AnimatedLogoState();
+  }
+  
+  class _AnimatedLogoState extends State<AnimatedLogo> with SingleTickerProviderStateMixin {
+    late AnimationController _controller;
+    late Animation<double> _animation;
+  
+    @override
+    void initState() {
+      super.initState();
+      _controller = AnimationController(
+        duration: const Duration(seconds: 2),
+        vsync: this,
+      );
+      _animation = CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeIn,
+      );
+      _controller.forward();
+    }
+  
+    @override
+    Widget build(BuildContext context) {
+      return FadeTransition(
+        opacity: _animation,
+        child: Container(
+          width: 200,
+          height: 200,
+          color: Colors.blue,
+          child: Center(
+            child: Text(
+              'Logo',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
+          ),
+        ),
+      );
+    }
+  
+    @override
+    void dispose() {
+      _controller.dispose();
+      super.dispose();
+    }
+  }
+  
+  class MyApp extends StatelessWidget {
+    @override
+    Widget build(BuildContext context) {
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: AnimatedLogo(),
+          ),
+        ),
+      );
+    }
+  }
+      `
+    },
+    option2: {
+      framework: "React Native",
+      code: `
+  import React, { useEffect } from 'react';
+  import { View, Text, StyleSheet } from 'react-native';
+  import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    Easing,
+  } from 'react-native-reanimated';
+  
+  const AnimatedLogo = () => {
+    const opacity = useSharedValue(0);
+  
+    useEffect(() => {
+      opacity.value = withTiming(1, {
+        duration: 2000,
+        easing: Easing.ease,
+      });
+    }, []);
+  
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        opacity: opacity.value,
+      };
+    });
+  
+    return (
+      <Animated.View style={[styles.logo, animatedStyle]}>
+        <Text style={styles.text}>Logo</Text>
+      </Animated.View>
+    );
+  };
+  
+  const App = () => {
+    return (
+      <View style={styles.container}>
+        <AnimatedLogo />
+      </View>
+    );
+  };
+  
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    logo: {
+      width: 200,
+      height: 200,
+      backgroundColor: 'blue',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    text: {
+      color: 'white',
+      fontSize: 24,
+    },
+  });
+  
+  export default App;
+      `
     }
   }
 ];
@@ -236,7 +906,7 @@ export default function FlutterReactNativeQuiz() {
                 language="javascript" 
                 style={tomorrow} 
                 className="text-sm h-full"
-                customStyle={{ height: '100%' }}
+                customStyle={{ height: '100%', borderRadius: "4px" }}
               >
                 {option.code.trim()}
               </SyntaxHighlighter>
@@ -257,45 +927,24 @@ export default function FlutterReactNativeQuiz() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
-      <style jsx global>{`
-        .custom-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(155, 155, 155, 0.5);
-          border-radius: 20px;
-          border: transparent;
-        }
-      `}</style>
       <motion.div
-        className="bg-white rounded-xl shadow-2xl p-8 max-w-5xl w-full"
+        className="bg-slate-200 rounded-xl shadow-2xl p-8 max-w-5xl w-full border border-gray-900 flex flex-col items-center gap-8"
         variants={screenVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
       >
-        <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">React Native vs Flutter</h1>
-        
+        <h1 className="text-4xl text-gray-800">&quot;React Native v/s Flutter&quot; Survey</h1>
         {currentScreen === 'intro' && (
-          <motion.div className="text-center" variants={screenVariants}>
-            <p className="mb-8 text-gray-600 text-lg">
-              This advanced quiz will help you compare React Native and Flutter based on code examples, 
-              documentation styles, and framework-specific approaches. Answer the questions to see which 
-              framework aligns better with your preferences and coding style.
+          <motion.div className="flex flex-col gap-12" variants={screenVariants}>
+            <p className=" leading-6 text-gray-600 text-xl italic">
+              Developers are sentitive creatures, who are extremely susceptible to subtle nuances, personal preference and taste. This survey is designed to take you through an exploratory journey on finiding what you might like better today and let tomorrow decide for itself.
             </p>
             <button
               onClick={handleStart}
-              className="bg-blue-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:bg-blue-600 transition duration-300 shadow-lg"
+              className="bg-purple-600 text-white px-8 py-4 rounded-full text-xl font-semibold hover:bg-purple-700 transition duration-300 shadow-lg"
             >
-              Start Advanced Quiz
+              Start Survey
             </button>
           </motion.div>
         )}
@@ -305,7 +954,7 @@ export default function FlutterReactNativeQuiz() {
             <h2 className="text-2xl font-semibold mb-6 text-center text-gray-700">{questions[currentQuestion].question}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <motion.div
-                className="bg-blue-100 p-6 rounded-lg cursor-pointer hover:bg-blue-200 transition duration-300 shadow-md h-[500px]"
+                className="bg-blue-100 p-6 rounded-lg cursor-pointer hover:bg-blue-200 transition duration-300 shadow-md h-[360px]"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleAnswer('option1')}
@@ -313,7 +962,7 @@ export default function FlutterReactNativeQuiz() {
                 {renderQuestionContent(questions[currentQuestion], questions[currentQuestion].option1)}
               </motion.div>
               <motion.div
-                className="bg-purple-100 p-6 rounded-lg cursor-pointer hover:bg-purple-200 transition duration-300 shadow-md h-[500px]"
+                className="bg-purple-100 p-6 rounded-lg cursor-pointer hover:bg-purple-200 transition duration-300 shadow-md h-[360px]"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleAnswer('option2')}
