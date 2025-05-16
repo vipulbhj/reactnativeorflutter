@@ -1,8 +1,10 @@
-# React + Vite
+# React Native or Flutter
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A survey style web app that you can host and distribute this survey in your team, to understand, document and analyse your teams, preferences, biases, and more.
 
-Currently, two official plugins are available:
+## RUN:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```console
+- npm install
+- npm run dev
+```
